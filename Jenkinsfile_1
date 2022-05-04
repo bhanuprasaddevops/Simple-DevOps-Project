@@ -1,0 +1,117 @@
+pipeline
+
+{
+
+agent any
+
+tools 
+ {
+
+ maven 'Maven_3.8.5'
+ }
+
+stages
+
+{
+  stage ('checkoutcode')
+
+  {
+
+  steps 
+    {
+
+     git credentialsId: '114c982a-3837-4aeb-b343-b53335dfe920', url: 'https://github.com/ClassDev-Org/maven-web-application.git'
+
+    }
+  }
+ 
+ stage ('build')
+
+ {
+  steps 
+   {
+   
+    sh "mvn clean package"
+   }
+
+ }
+
+ stage ('executeSonarReport')
+
+ {
+  steps 
+   {
+   
+    sh "mvn clean sonar:sonar"
+   }
+ 
+ }
+
+stage ('uploadtoNexus')
+
+ {
+  steps 
+   {
+   
+    sh "mvn deploy"
+   }
+
+ }
+
+stage ('DeployToTomcat')
+{
+  steps{
+sshagent(['cc77f162-bbcd-457e-9887-ff5264699dbf']) 
+             {
+sh " scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@3.110.47.185:/opt/apache-tomcat-9.0.58/webapps/" 
+             }
+
+       }
+      
+  
+ }
+
+post{
+
+always 
+      { 
+
+emailext body: '''Build competed 
+
+
+regards,
+admin''', subject: 'build-competed', to: 'djeevan12@gmail.com'
+
+
+       }
+success 
+       {
+
+emailext body: '''Build competed 
+
+
+regards,
+admin''', subject: 'build-competed', to: 'djeevan12@gmail.com,bhanu12@gmail.com'
+
+        }
+
+failure 
+       {
+
+
+emailext body: '''Build competed 
+
+
+regards,
+admin''', subject: 'build-competed', to: 'siddu12@gmail.com,deweesh12@gmail.com'
+
+        }
+
+}
+
+
+}
+
+
+}
+
